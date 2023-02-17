@@ -160,7 +160,7 @@ def Take_query():
 
 		elif "busca en youtube" in query:
 			speak("Abriendo Youtube ")
-			# Busca en google solo lo que está a la derecha de "busca en google"
+			# Busca en youtube solo lo que está a la derecha de "busca en youtube"
 			query = query.replace("busca en youtube", "")
 			input = urllib.parse.urlencode({'search_query': query})
 			html = urllib.request.urlopen("http://www.youtube.com/results?" + input)
