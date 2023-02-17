@@ -4,7 +4,9 @@ import webbrowser
 import datetime
 import wikipedia
 from bs4 import BeautifulSoup
+import re
 import urllib.request
+import urllib.parse
 
 # Función para transformar oraciones con 
 # tildes a sin-tildes, y llevarlas a 
@@ -41,7 +43,7 @@ def takeCommand():
 		# Sensibilidad del micrófono (influye 
 		# en lo que reconoce como silencio)
 		# se sugiere entre 50 y 4000
-		r.energy_threshold = 1500
+		r.energy_threshold = 2500
 		audio = r.listen(source)
 		
 		
@@ -106,7 +108,7 @@ def tellDay():
 	if day in Day_dict.keys():
 		day_of_the_week = Day_dict[day]
 		print(day_of_the_week)
-		speak("Hoy es" + day_of_the_week)
+		speak("Hoy es " + day_of_the_week)
 
 
 def tellTime():
@@ -131,7 +133,11 @@ def Take_query():
 
 	# Llamando al mensaje de inicio de 'SAIL'
 	Hello()
-	
+	# Definiendo algunos grupos de palabras
+	# Para poder activar una rutina con 
+	# varias frases
+	identidad=['dime tu nombre', 'como te llamas', 'con quien hablo']
+	despedida=['chao', 'adios', 'hasta luego']
 	# El siguiente loop infinito toma los 
 	# comandos continuamente hasta que se 
 	# pida salir o se cancele el programa
@@ -144,9 +150,22 @@ def Take_query():
 	while(True):
 
 		query=takeCommand()
-		if "abre google" in query:
+		if "busca en google" in query:
 			speak("Abriendo Google ")
-			webbrowser.open("www.google.com")
+			# Busca en google solo lo que está a la derecha de "busca en google"
+			query = query.replace("busca en google", "")
+			url = "https://www.google.com.tr/search?q={}".format(query)
+			webbrowser.open(url)
+			continue
+
+		elif "busca en youtube" in query:
+			speak("Abriendo Youtube ")
+			# Busca en google solo lo que está a la derecha de "busca en google"
+			query = query.replace("busca en youtube", "")
+			input = urllib.parse.urlencode({'search_query': query})
+			html = urllib.request.urlopen("http://www.youtube.com/results?" + input)
+			video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+			webbrowser.open("https://www.youtube.com/watch?v=" + video_ids[0])
 			continue
 			
 		elif "que dia es" in query:
@@ -158,7 +177,7 @@ def Take_query():
 			continue
 		
 		# Este caso sale y termina el programa
-		elif "chao" in query:
+		elif (any(word in query for word in despedida)):
 			speak("Chao.")
 			exit()
 		
@@ -175,8 +194,9 @@ def Take_query():
 			speak("De acuerdo a wikipedia")
 			speak(result)
 		
-		elif "dime tu nombre" in query:
+		elif (any(word in query for word in identidad)):
 			speak("Soy SAIL. Tu asistente virtual")
+		
 		elif "dolar" in query:
 			try:
 				page = urllib.request.urlopen("https://www.bcv.org.ve")
